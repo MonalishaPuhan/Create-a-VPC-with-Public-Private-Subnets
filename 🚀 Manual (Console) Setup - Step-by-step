@@ -1,0 +1,29 @@
+## 🔁 CLI Quick Reference (AWS CLI)
+
+> Assumes `aws` CLI configured and `--region` set or provided.
+
+**Create VPC**
+```bash
+aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=MyVPC}]'
+
+CREATE SUBNETS:
+aws ec2 create-subnet --vpc-id <VPC_ID> --cidr-block 10.0.1.0/24 --availability-zone <AZ>
+aws ec2 create-subnet --vpc-id <VPC_ID> --cidr-block 10.0.2.0/24 --availability-zone <AZ>
+
+CREATE & ATTACH IGW:
+aws ec2 create-internet-gateway --tag-specifications 'ResourceType=internet-gateway,Tags=[{Key=Name,Value=MyIGW}]'
+aws ec2 attach-internet-gateway --internet-gateway-id <IGW_ID> --vpc-id <VPC_ID>
+
+CREATE NAT GATEWAY:
+aws ec2 allocate-address --domain vpc        # returns AllocationId
+aws ec2 create-nat-gateway --subnet-id <PUBLIC_SUBNET_ID> --allocation-id <ALLOC_ID>
+
+CREATE ROUTE TABLES AND ROUTES:
+aws ec2 create-route-table --vpc-id <VPC_ID>      # create PublicRT
+aws ec2 create-route --route-table-id <PUBLICRT_ID> --destination-cidr-block 0.0.0.0/0 --gateway-id <IGW_ID>
+
+aws ec2 create-route-table --vpc-id <VPC_ID>      # create PrivateRT
+aws ec2 create-route --route-table-id <PRIVATERT_ID> --destination-cidr-block 0.0.0.0/0 --nat-gateway-id <NAT_ID>
+
+(Use aws ec2 associate-route-table to associate tables to subnets.)
+
