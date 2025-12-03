@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AWS VPC — Public & Private Subnets (Project)</title>
+  <meta name="description" content="Hands-on AWS VPC project: custom VPC with public and private subnets, IGW, NAT Gateway, route tables and EC2 validation." />
+  <style>
+    :root{--bg:#0f172a;--card:#0b1220;--accent:#8b5cf6;--muted:#94a3b8;--glass:rgba(255,255,255,0.03)}
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0;background:linear-gradient(180deg,#071029 0%,#081126 100%);color:#e6eef8;line-height:1.5}
+    .container{max-width:980px;margin:36px auto;padding:28px}
+    header{display:flex;align-items:center;gap:18px}
+    .logo{width:64px;height:64px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:700;color:white}
+    h1{margin:0;font-size:22px}
+    p.lead{color:var(--muted);margin-top:6px}
+    .card{background:var(--card);padding:18px;border-radius:12px;margin-top:18px;box-shadow:0 6px 18px rgba(11,18,32,0.6)}
+    .grid{display:grid;grid-template-columns:1fr 320px;gap:18px}
+    .section-title{display:flex;justify-content:space-between;align-items:center}
+    .badge{background:var(--glass);padding:6px 10px;border-radius:999px;color:var(--muted);font-size:13px}
+    pre{background:#021022;padding:12px;border-radius:8px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace}
+    .svg-arch{width:100%;height:220px;margin-top:12px}
+    .screenshots{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+    .screenshots img{width:calc(50% - 5px);border-radius:8px;border:1px solid rgba(255,255,255,0.04)}
+    .actions{display:flex;gap:8px;margin-top:12px}
+    a.btn{display:inline-block;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:600}
+    .btn-primary{background:linear-gradient(90deg,var(--accent),#06b6d4);color:#041023}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    footer{margin-top:22px;color:var(--muted);font-size:13px}
+    @media (max-width:880px){.grid{grid-template-columns:1fr} .screenshots img{width:100%}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">VPC</div>
+      <div>
+        <h1>AWS VPC — Public & Private Subnets</h1>
+        <p class="lead">Short project site documenting a custom VPC (10.0.0.0/16) with a public subnet, private subnet, IGW, NAT Gateway, and route tables.</p>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="section-title">
+        <strong>Overview</strong>
+        <span class="badge">Beginner • Networking • AWS</span>
+      </div>
+      <p style="color:var(--muted);margin-top:10px">This project demonstrates how to design a simple production-like network in AWS. Use this page as project documentation or link it from your LinkedIn post. Replace placeholder screenshots with your actual images and publish on Vercel.</p>
+
+      <div class="grid">
+        <div>
+          <h3 style="margin-top:12px">Architecture</h3>
+          <svg class="svg-arch" viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VPC architecture diagram">
+            <defs>
+              <linearGradient id="g1" x1="0" x2="1">
+                <stop offset="0" stop-color="#8b5cf6" />
+                <stop offset="1" stop-color="#06b6d4" />
+              </linearGradient>
+            </defs>
+            <rect x="8" y="8" rx="12" width="884" height="284" fill="#041022" stroke="#052033"/>
+            <text x="30" y="40" fill="#9fb8d9" font-size="14">MyVPC (10.0.0.0/16)</text>
+
+            <!-- Public Subnet -->
+            <rect x="40" y="72" width="350" height="92" rx="8" fill="#071733" stroke="#16324a" />
+            <text x="56" y="98" fill="#cfe8ff" font-size="13">Public Subnet (10.0.1.0/24)</text>
+            <text x="56" y="118" fill="#94a3b8" font-size="12">→ Internet Gateway (IGW)</text>
+            <rect x="60" y="140" width="120" height="28" rx="6" fill="url(#g1)" />
+            <text x="72" y="158" font-weight="700" fill="#041023">IGW</text>
+
+            <!-- NAT -->
+            <rect x="420" y="110" width="120" height="28" rx="6" fill="#0b2540" stroke="#0e4a75" />
+            <text x="448" y="129" fill="#9fb8d9">NAT Gateway (in Public)</text>
+
+            <!-- Private Subnet -->
+            <rect x="40" y="180" width="350" height="92" rx="8" fill="#071733" stroke="#16324a" />
+            <text x="56" y="206" fill="#cfe8ff" font-size="13">Private Subnet (10.0.2.0/24)</text>
+            <text x="56" y="226" fill="#94a3b8" font-size="12">→ Route 0.0.0.0/0 → NAT Gateway (Outbound only)</text>
+
+            <!-- EC2 -->
+            <rect x="520" y="70" width="130" height="58" rx="8" fill="#072033" stroke="#0f3a57" />
+            <text x="540" y="100" fill="#cfe8ff">EC2 (Public)</text>
+            <rect x="520" y="150" width="130" height="58" rx="8" fill="#072033" stroke="#0f3a57" />
+            <text x="540" y="180" fill="#cfe8ff">EC2 (Private)</text>
+
+            <!-- Arrows -->
+            <path d="M420 134 L520 134" stroke="#2fa3ff" stroke-width="2" fill="none" marker-end="url(#arrow)" />
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto">
+                <path d="M0 0 L10 5 L0 10 z" fill="#2fa3ff" />
+              </marker>
+            </defs>
+            <path d="M260 200 L420 138" stroke="#9fb8d9" stroke-width="1.6" fill="none" stroke-dasharray="6 4"/>
+          </svg>
+
+          <h3 style="margin-top:14px">Quick Commands</h3>
+          <pre><code>aws ec2 create-vpc --cidr-block 10.0.0.0/16
+aws ec2 create-subnet --vpc-id &lt;vpc&gt; --cidr-block 10.0.1.0/24
+aws ec2 create-subnet --vpc-id &lt;vpc&gt; --cidr-block 10.0.2.0/24
+# Create IGW, NAT, Route Tables and associate accordingly
+</code></pre>
+
+          <h3 style="margin-top:14px">How to validate</h3>
+          <ul style="color:var(--muted);margin-top:8px">
+            <li>SSH to public EC2 (has public IP)</li>
+            <li>From public EC2, test connectivity to private EC2 (private IP)</li>
+            <li>On private EC2, run <code>curl ifconfig.me</code> — should show NAT's Elastic IP</li>
+          </ul>
+
+        </div>
+
+        <aside>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong>Screenshots</strong>
+            <span class="badge">Replace with yours</span>
+          </div>
+          <div class="screenshots">
+            <img src="VPCflowmap.png" alt="VPC Dashboard">
+            <img src="Subnets.png" alt="Subnets">
+            <img src="RTs.png" alt="Route Tables">
+            <img src="NAT.png" alt="NAT Gateway">
+          </div>
+
+          <div class="actions">
+            <a class="btn btn-primary" href="#" onclick="alert('Replace placeholder images with your screenshots and click deploy on Vercel.')">Deploy to Vercel</a>
+            <a class="btn btn-ghost" href="#" onclick="alert('Download this HTML file and add to a repo to deploy on Vercel.')">Download HTML</a>
+          </div>
+
+          <div style="margin-top:14px;background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;color:var(--muted)">
+            <strong>Share on LinkedIn</strong>
+            <p style="margin:8px 0 0;font-size:13px">Use a short caption, attach 3–4 screenshots and link this page. Example caption: <em>"Built a custom AWS VPC with public & private subnets — screenshots + steps."</em></p>
+          </div>
+        </aside>
+
+      </div>
+
+      <footer>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>Made with ❤️ • Replace screenshots before publishing</div>
+          <div style="color:var(--muted)">Tip: Add your GitHub repo link & architecture diagram</div>
+        </div>
+      </footer>
+    </div>
+
+  </div>
+
+</body>
+</html>
