@@ -6,6 +6,7 @@
 A simple, hands-on AWS networking project that demonstrates creation of a custom VPC with one public subnet and one private subnet. The public subnet has an Internet Gateway for inbound/outbound internet access; the private subnet routes outbound traffic through a NAT Gateway (keeps instances private). Includes optional steps to launch EC2 instances to validate connectivity.
 
 ---
+## VERCEL LINK (A Full HTML/CSS documentation page ) :create-a-vpc-with-public-private-subnets-bv32-5lrslyip1.vercel.app
 
 ## 🔍 Project Objectives
 - Create a custom VPC (`10.0.0.0/16`)
